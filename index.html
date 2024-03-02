@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRUD App</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 2px;
+      text-align: center;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: auto;
+      gap: 10px;
+      padding: 2px;
+      
+      background-color: #f5f5f5;
+    }
+  
+    h1, h2 {
+      color: #333;
+    }
+  
+    div {
+      grid-column: span 2;
+      margin-bottom:20px;
+      padding: 15px;
+      background-color: #fff;
+      border-radius: 100px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+  
+    form {
+      display: flex;
+      flex-direction: column;
+      max-width: 300px;
+      margin: auto;
+    }
+  
+    label {
+      margin-bottom: 8px;
+    }
+  
+    input {
+      padding: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+  
+    button {
+      padding: 10px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  
+    button:hover {
+      background-color: #0056b3;
+    }
+  hr{
+    grid-column: span 4;
+      border: 0;
+      border-top: 2px solid #ddd;
+      margin: 10px 0;
+  }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+  
+    li {
+      margin-bottom: 8px;
+    }
+  </style>
+  
+</head>
+<body>
+
+  <h1>Student CRUD App</h1>
+
+  <div>
+    <h2>Create Student</h2>
+    <form id="createForm">
+      <label for="name">Name:</label>
+      <input type="text" id="name" required>
+      <label for="rollNo">Roll No:</label>
+      <input type="number" id="rollNo" required>
+      <button type="button" onclick="createStudent()">Create</button>
+    </form>
+  </div>
+
+  <div>
+    <h2>Update Student</h2>
+    <form id="updateForm">
+      <label for="updateRollNo">Roll No:</label>
+      <input type="number" id="updateRollNo" required>
+      <label for="updateName">New Name:</label>
+      <input type="text" id="updateName" required>
+      <button type="button" onclick="updateStudent()">Update</button>
+    </form>
+  </div>
+
+  <div>
+    <h2>Delete Student</h2>
+    <form id="deleteForm">
+      <label for="deleteRollNo">Roll No:</label>
+      <input type="number" id="deleteRollNo" required>
+      <button type="button" onclick="deleteStudent()">Delete</button>
+    </form>
+  </div>
+
+  <div >
+    <h2>Fetch Students</h2>
+    <button type="button" id="fetchButton" onclick="fetchStudents()">Fetch Students</button>
+    <ul id="studentList"></ul>
+  </div>
+  <script>
+    async function createStudent() {
+      const name = document.getElementById('name').value;
+      const rollNo = document.getElementById('rollNo').value;
+
+      const response = await fetch('http://localhost:3000/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Name: name, RollNo: rollNo }),
+      });
+
+      const result = await response.json();
+      alert('Student created successfully!');
+      console.log(result);
+    }
+
+    async function updateStudent() {
+      const updateRollNo = document.getElementById('updateRollNo').value;
+      const updateName = document.getElementById('updateName').value;
+
+      const response = await fetch(`http://localhost:3000/api/students/${updateRollNo}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Name: updateName }),
+      });
+
+      const result = await response.json();
+      alert('Student updated successfully!');
+      console.log(result);
+    }
+
+    async function deleteStudent() {
+      const deleteRollNo = document.getElementById('deleteRollNo').value;
+
+      const response = await fetch(`http://localhost:3000/api/students/${deleteRollNo}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+      alert('Student deleted successfully!');
+      console.log(result);
+    }
+
+    async function fetchStudents() {
+      const response = await fetch('http://localhost:3000/api/students');
+      const students = await response.json();
+
+      const studentList = document.getElementById('studentList');
+      studentList.innerHTML = '';
+
+      students.forEach(student => {
+        const li = document.createElement('li');
+        li.textContent = `Roll No: ${student.RollNo}, Name: ${student.Name}`;
+        studentList.appendChild(li);
+      });
+    }
+  </script>
+
+</body>
+</html>
