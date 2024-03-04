@@ -1,3 +1,10 @@
+download
+nodejs 
+mysql
+git
+
+npm install express mysql2 cors
+
 CREATE USER 'Aayush'@'%' IDENTIFIED BY '123456';
 GRANT ALL PRIVILEGES ON Stud.* TO 'Aayush'@'%';
 FLUSH PRIVILEGES;
@@ -10,3 +17,4 @@ values("Aayush",1);
 
 insert into students
 values("Hrutesh",2);
+
