@@ -1,5 +1,5 @@
 const express = require('express');
-const sql = require('mssql');
+const mysql = require('mysql2/promise'); // Use 'mysql2/promise' for async/await support
 const cors = require('cors');
 
 const app = express();
@@ -7,29 +7,20 @@ const port = 3000;
 app.use(cors());
 
 const config = {
-  server: 'DESKTOP-381RTJ2',
+  host: 'localhost',
+  user: 'Aayush',
+  password: '123456',
   database: 'Stud',
-  authentication: {
-    type: 'default',
-    options: {
-      userName: 'sa',
-      password: '121212',
-    },
-  },
-  options: {
-    encrypt: true,
-    trustServerCertificate: true,
-    port: 1433,
-  },
 };
+
+const pool = mysql.createPool(config);
 
 app.use(express.json());
 
 app.get('/api/students', async (req, res) => {
   try {
-    const pool = await sql.connect(config);
-    const result = await pool.request().query('SELECT * FROM Student');
-    res.json(result.recordset);
+    const [rows] = await pool.query('SELECT * FROM Students');
+    res.json(rows);
   } catch (err) {
     console.error('Query error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', message: err.message });
@@ -38,12 +29,8 @@ app.get('/api/students', async (req, res) => {
 
 app.get('/api/students/:RollNo', async (req, res) => {
   try {
-    const pool = await sql.connect(config);
-    const result = await pool
-      .request()
-      .input('RollNo', sql.Int, req.params.RollNo)
-      .query('SELECT * FROM Student WHERE RollNo = @RollNo');
-    res.json(result.recordset[0]);
+    const [rows] = await pool.execute('SELECT * FROM Students WHERE RollNo = ?', [req.params.RollNo]);
+    res.json(rows[0]);
   } catch (err) {
     console.error('Query error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', message: err.message });
@@ -52,14 +39,9 @@ app.get('/api/students/:RollNo', async (req, res) => {
 
 app.post('/api/students', async (req, res) => {
   try {
-    const pool = await sql.connect(config);
     const { Name, RollNo } = req.body;
-    const result = await pool
-      .request()
-      .input('Name', sql.VarChar, Name)
-      .input('RollNo', sql.Int, RollNo)
-      .query('INSERT INTO Student (Name, RollNo) VALUES (@Name, @RollNo); SELECT SCOPE_IDENTITY() AS newStudentId');
-    res.json({ id: result.recordset[0].newStudentId, Name, RollNo });
+    const [result] = await pool.execute('INSERT INTO Students (Name, RollNo) VALUES (?, ?)', [Name, RollNo]);
+    res.json({ id: result.insertId, Name, RollNo });
   } catch (err) {
     console.error('Query error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', message: err.message });
@@ -68,13 +50,8 @@ app.post('/api/students', async (req, res) => {
 
 app.put('/api/students/:RollNo', async (req, res) => {
   try {
-    const pool = await sql.connect(config);
     const { Name } = req.body;
-    const result = await pool
-      .request()
-      .input('RollNo', sql.Int, req.params.RollNo)
-      .input('Name', sql.VarChar, Name)
-      .query('UPDATE Student SET Name = @Name WHERE RollNo = @RollNo');
+    await pool.execute('UPDATE Students SET Name = ? WHERE RollNo = ?', [Name, req.params.RollNo]);
     res.json({ RollNo: req.params.RollNo, Name });
   } catch (err) {
     console.error('Query error:', err.message);
@@ -84,11 +61,7 @@ app.put('/api/students/:RollNo', async (req, res) => {
 
 app.delete('/api/students/:RollNo', async (req, res) => {
   try {
-    const pool = await sql.connect(config);
-    const result = await pool
-      .request()
-      .input('RollNo', sql.Int, req.params.RollNo)
-      .query('DELETE FROM Student WHERE RollNo = @RollNo');
+    await pool.execute('DELETE FROM Students WHERE RollNo = ?', [req.params.RollNo]);
     res.json({ RollNo: req.params.RollNo, message: 'Student deleted successfully' });
   } catch (err) {
     console.error('Query error:', err.message);
